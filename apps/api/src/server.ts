@@ -2,7 +2,7 @@ import { json, urlencoded } from "body-parser";
 import express, { type Express } from "express";
 import morgan from "morgan";
 import cors from "cors";
-
+import router from "./router/index"
 export const createServer = (): Express => {
   const app = express();
   app
@@ -17,6 +17,7 @@ export const createServer = (): Express => {
     .get("/status", (_, res) => {
       return res.json({ ok: true });
     });
+  app.use("/api",router)
 
   return app;
 };
