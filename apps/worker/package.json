@@ -1,0 +1,30 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "node dist/bundle.js",
+    "build": "esbuild src/index.ts --bundle --platform=node --outfile=dist/bundle.js --external:",
+    "start": "node dist/bundle.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.816.0",
+    "@aws-sdk/s3-request-presigner": "^3.816.0",
+    "@repo/lib": "workspace:*",
+    "axios": "^1.7.9",
+    "bullmq": "^5.53.0",
+    "dotenv": "^16.4.7",
+    "fs": "0.0.1-security",
+    "tsup": "^8.0.2"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "esbuild": "^0.24.0",
+    "typescript": "5.5.4"
+  }
+}
