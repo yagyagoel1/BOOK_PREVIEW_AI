@@ -1,19 +1,9 @@
 import { generalConfig } from "@repo/lib/src"
 import Redis from "ioredis"
-
+import type {StatusObject} from "@repo/lib/src/types"
 
 const redis = new Redis();
 
-type StatusObject = {
-  status: "failed" | "pending"| "completed",
-  message:string,
-  data?:{
-    text:string,
-    author?:string,
-    title:string,
-    category:"fiction"|"non-fiction"
-  }
-};
 
 
 
