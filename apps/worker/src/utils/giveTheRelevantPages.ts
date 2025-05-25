@@ -30,7 +30,7 @@ export async function isMainContent(snippet: string){
       {
         role: 'system',
         content: `
-You are a page classifier for digitized books. You will be given a set of book pages in order with their image file names and text snippets. Your task is to ignore all front matter (such as the cover, title page, table of contents, dedication, quotes, introduction, etc.) and return either the first or second actual content page (based on the instruction).
+You are a page classifier for digitized books. You will be given a set of book pages in order with their image file names and text snippets. Your task is to ignore all front matter (such as the cover, title page, table of contents, dedication,prologue, quotes, introduction, etc.) and return either the first or second actual content page (based on the instruction).
 
 Instructions:
 
