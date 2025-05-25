@@ -11,7 +11,7 @@ class Resp{
     }
   
 
-    static error(message = 'An error occurred', statusCode = 500, errors = null,extras={}) {
+    static error(message = 'An error occurred', statusCode = 500, errors:Error|null = null,extras={}) {
       return {
         success: 0,
         statusCode,
