@@ -9,7 +9,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 export const handleUpload=  asyncHandler(async (req:Request,res:Response)=>{
 const bookImagePath = req.file?.path;
 if(!bookImagePath){
-res.json(Resp.error("error getting the path of the book image uploaded please reupload",400))
+res.json(Resp.error("please make sure its an image please reupload",400))
 return
 }
 const response  =await  handleUploadService(bookImagePath)

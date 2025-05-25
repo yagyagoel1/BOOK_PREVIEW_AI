@@ -4,7 +4,7 @@ import { createReadStream } from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { generalConfig } from "@repo/lib/src";
-
+import fs from "fs"
 
 
 
@@ -35,6 +35,9 @@ export async function uploadToS3(filePath: string) {
 
   try {
     await upload.done();
+    //delete the png
+    fs.unlinkSync(filePath);
+
     console.log(`Upload successful`);
 
     return s3Key
