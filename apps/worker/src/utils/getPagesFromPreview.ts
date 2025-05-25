@@ -4,8 +4,12 @@ import path from 'path';
 
 export async function downloadPreviewPages(previewUrl: string,uuid:string) {
   const browser = await puppeteer.launch({
-    headless: false, // headful to avoid "image not available"
-    args: ['--start-maximized']
+    headless: false, 
+    args: [
+      '--start-maximized',
+      '--disable-web-security',
+      '--allow-running-insecure-content'
+    ]
   });
 
   const page = await browser.newPage();

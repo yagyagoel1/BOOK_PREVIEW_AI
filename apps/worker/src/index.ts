@@ -5,7 +5,6 @@
 
 //check the blurr
 
-//push it to    import  { exec,spawn } from 'child_process'
 import { Worker, Job } from "bullmq";
 import  { generalConfig, redisConnection } from '@repo/lib/src';
 import dotenv from 'dotenv';
@@ -16,22 +15,32 @@ import { downloadPreviewPages } from './utils/getPagesFromPreview';
 import { findBestMatchingBook } from './utils/gettingTheBestPreview';
 import { doOCR } from './utils/OCR';
 import { isMainContent, snippetBuilder } from './utils/giveTheRelevantPages';
+import { setStatus } from "./utils/redis";
 dotenv.config()
 
 
 const processTask = async(jobId:string,startTime:number,data:{id:string,path:string})=>{
   const presignedUrl = await getPresignedUrl(data.path)
+  await new Promise((resolve)=>setTimeout(() => {
+    resolve("done")
+  }, 3000))
   try{
   const aboutTheBook = await analyzeBookCover(presignedUrl)
+  console.log(aboutTheBook)
     const aboutBook = aboutTheBook?.details
-  if(!aboutTheBook?.isCover){
-    //push to redis  and enjoy i guess set the status failed to its not a cover 
-  }
-  if(aboutTheBook?.isBlurry){
+    if(aboutTheBook?.isBlurry?.toUpperCase()=='YES'){
      //push to redis  and enjoy i guess set the status to failed  its blurry
+     await setStatus(jobId ,{status:"failed",message:"image too blurry please reupload"})
+     return;
   }
+  console.log(aboutTheBook?.isCover,"fee")
+  if(aboutTheBook?.isCover?.toUpperCase()=='NO'){
+    await setStatus(jobId ,{status:"failed",message:"cover not found please reupload"})
+    return;
+  }
+  
   if(!aboutBook?.title){
-     //use fallback for image search 
+    throw new Error("book title not found")
   }
 
   const booksData  = await searchBook(aboutBook?.title,aboutBook?.author?aboutBook.author:null)
@@ -44,7 +53,7 @@ try{
 if(!responseFromModel.previewLink){
     throw new Error("previewLink Not Found")
 }
-//fallback
+
 }catch(error){
     console.log(error)
     responseFromModel={
@@ -66,12 +75,23 @@ if(resultImage&&resultImage.file){
   const actualTextContent  = contentPage.text
 
   // push to redis with the 
+  await setStatus(jobId,{
+    status:"completed",
+    data:{
+      text:actualTextContent,
+      author:responseFromModel.author as string,
+      title:responseFromModel.title as string,
+      category:responseFromModel.category =="fiction"?"fiction":"non-fiction"
+
+    },
+    message:"Processed Successfully"
+  })
 }
 
 
   }catch(err){
     console.log(err)
-    //handle erro case
+    throw new Error("Error while processing")
   }
 }
 const  handler  = new Worker(
@@ -96,7 +116,20 @@ const  handler  = new Worker(
 handler.on("completed", (job:Job) => {
     console.log(`Job with id ${job.id} has been completed`);
   });
-  handler.on("failed", (job, error:Error) => {
+  handler.on("failed", async(job, error:Error) => {
     console.log(error)
     console.log(`Job with id ${job?.id} has failed with error ${error.message}`);
+    
+    // Check if this was the final retry attempt
+    if (job && job.attemptsMade >= (job.opts.attempts || 3)) {
+      await setStatus(job.id || "unknown", {
+        status: "failed",
+        message: `Processing failed after ${job.attemptsMade} attempts: ${error.message}`
+      });
+    }else if(job&& job.id){
+      await setStatus(job.id,{
+        status:"retrying",
+        message:"failed to process your book Dont worry wee are retrying"
+      })
+    }
   });   

@@ -1,9 +1,10 @@
-import axios from 'axios';
+import { generalConfig } from '@repo/lib/src';
+import OpenAI from 'openai';
 
-const OPENAI_API_KEY = 'your_openai_api_key';
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// Simulate the agent's function
 export async function findBestMatchingBook(queryTitle: {title:string,author?:string}, books: any[]) {
   const prompt = `
 You are a helpful assistant that selects the best matching book from a list.
@@ -32,35 +33,31 @@ thirdly if you still get multiple books check if you can find the book in englis
 Respond ONLY with a valid JSON object that strictly follows the structure above. Do not include any explanation, text, or formatting outside the JSON. 
 Output Format:
 {
-link:"string"
+previewLink:"string"
 category:"fiction" or "non-fiction"
 title: "string",
-Author: "string or null"}
+author: "string or null"}
 
 Example:
 {
-link: "https://......",
+previewLink: "https://......",
 category: "fiction",
 title: "title",
-Author: null,
+author: null,
 }
 `;
 
-  const response = await axios.post(OPENAI_API_URL, {
-    model: 'gpt-3.5-turbo',
+  const response = await openai.chat.completions.create({
+    model: generalConfig.GPT3,
+    response_format: { type: "json_object" },
     messages: [
       { role: 'system', content: 'You are a book-matching assistant.' },
       { role: 'user', content: prompt },
     ],
     temperature: 0.2,
-  }, {
-    headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
   });
 
-  const answer = response.data.choices[0].message.content;
+  const answer = response.choices[0].message.content;
   try {
     console.log(answer)
     if(!answer){
@@ -73,6 +70,3 @@ Author: null,
   throw err;
 }
 }
-
-
-

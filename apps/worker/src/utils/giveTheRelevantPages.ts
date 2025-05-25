@@ -25,40 +25,56 @@ export function snippetBuilder(arraySnippet:Array<{
 export async function isMainContent(snippet: string){
   const resp = await openai.chat.completions.create({
     model: generalConfig.GPT3,
+    response_format: { type: "json_object" },
     messages: [
       {
         role: 'system',
         content: `
-You are a page classifier. 
-I will give you few snippets that are in order of a book i want you to ignore the front matters of the book and get the first or the second (you will get it in input)content page of the book
-here is the example input :
+You are a page classifier for digitized books. You will be given a set of book pages in order with their image file names and text snippets. Your task is to ignore all front matter (such as the cover, title page, table of contents, dedication, quotes, introduction, etc.) and return either the first or second actual content page (based on the instruction).
 
-    Get me the 1 content page ignoring the front matter  
+Instructions:
 
-    PAGES:
+The front matter includes: cover, title page, copyright, dedication, quotes, table of contents, and introductions.
+Actual content pages begin with chapter titles, numbered sections, or main body content.
+You will receive a request like:"Get me the 1 content page ignoring the front matter"or"Get me the 2 content page ignoring the front matter"
+Based on that, return the first or second valid content page.
 
+Input Format:
 
-    file: '123e4567-e89b-12d3-a456-426614174000_3.jpg',
-    snippet: "Contents Cover Title Page Introduction: The Greatest Show On Earth 1. No One’s Crazy 2. Luck & Risk 3. Never Enough 4. Confounding Compounding 5. Getting Wealthy vs. Staying Wealthy 6. Tails, You Win 7. Freedom 8. Man in the Car Paradox 9. Wealth is What You Don’t See 10. Save Money 11. Reasonable > Rational 12. Surprise! 13. Room for Error 14. You'll Change"
-    file: '123e4567-e89b-12d3-a456-426614174000_4.jpg',
-    snippet: "15. Nothing's Free 16. You & Me 17. The Seduction of Pessimism 18. When You'll Believe Anything 19. All Together Now 20. Confessi Postscript: A Brief History of Why the U.S. Consumer Thinks the Way They Do Endnotes Acknowledgements"
-    file: '123e4567-e89b-12d3-a456-426614174000_5.jpg',
-    snippet: '“A genius is the man who can do the average thing when everyone else around him is losing his mind.” —Napoleon “The world is full of obvious things which nobody by any chance ever observes.” —Sherlock Holmes'
+You will receive:
+An instruction (e.g., "Get me the 1 content page ignoring the front matter")
+A list of PAGES with:
+file: image file name
+snippet: text from that page
 
+Output Format:
 
-    here as you can see that each file has a  number against it that is the page number
-i want you to get the page that is the first page of the content if the input says "Get me the 1 content page ignoring the front matter" 
-else get me the second page of content also when the input says "Get me the 2 content page ignoring the front matter"
-
-Respond ONLY with a valid JSON object that strictly follows the structure above. Do not include any explanation, text, or formatting outside the JSON. 
-
-Example output:
+Respond ONLY with a JSON object in the following structure:
 {
-file: "uuid_5.jpg"
-message:"this is the first page of contnet"
- }
+  "file": "filename_here.jpg",
+  "pageno": "this is first page because 1 was passed"
+}
 
+Example Input:
+Get me the 1 content page ignoring the front matter
 
+PAGES:
+
+file: '123e4567-e89b-12d3-a456-426614174000_3.jpg',
+snippet: "Contents Cover Title Page Introduction: The Greatest Show On Earth 1. No One’s Crazy 2. Luck & Risk 3. Never Enough 4. Confounding Compounding 5. Getting Wealthy vs. Staying Wealthy 6. Tails, You Win 7. Freedom 8. Man in the Car Paradox 9. Wealth is What You Don’t See 10. Save Money 11. Reasonable > Rational 12. Surprise! 13. Room for Error 14. You'll Change"
+
+file: '123e4567-e89b-12d3-a456-426614174000_4.jpg',
+snippet: "15. Nothing's Free 16. You & Me 17. The Seduction of Pessimism 18. When You'll Believe Anything 19. All Together Now 20. Confessi Postscript: A Brief History of Why the U.S. Consumer Thinks the Way They Do Endnotes Acknowledgements"
+
+file: '123e4567-e89b-12d3-a456-426614174000_5.jpg',
+snippet: '“A genius is the man who can do the average thing when everyone else around him is losing his mind.” —Napoleon “The world is full of obvious things which nobody by any chance ever observes.” —Sherlock Holmes'
+
+Example Output:
+
+{
+  "file": "123e4567-e89b-12d3-a456-426614174000_5.jpg",
+  "pageno": "this is first page because 1 was passed"
+}
     `
       },
       { role: 'user', content: snippet }

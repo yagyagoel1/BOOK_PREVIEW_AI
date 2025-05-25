@@ -12,7 +12,8 @@ const openai = new OpenAI({
 export async function analyzeBookCover(presignedUrl: string) {
 
   const response = await openai.chat.completions.create({
-    model: generalConfig.MODELNAME,
+    model: generalConfig.GPT4,
+    response_format: { type: "json_object" },
     messages: [
       {
         role: "user",
@@ -21,7 +22,7 @@ export async function analyzeBookCover(presignedUrl: string) {
             type: "text",
             text: `You're a book cover recognition assistant. Analyze the image and answer:
 - Is this a book cover?
-- Is the image blurry?
+- Is the image blurry enough that you are not able to read?
 - What is the title and author of the book (if visible)?
 - Is the book fiction or non-fiction? 
 Strictly follow the structure(which is json) given below for the output and do not send output in any other way
