@@ -29,7 +29,7 @@ Structure:
 {
 isCover:("yes" or "no"),
 isBlurry:("yes" or "no"),
-details:{
+:{
 title:output
 author:output
 },
@@ -81,6 +81,9 @@ Respond ONLY with a valid JSON object that strictly follows the structure above.
 
 try {
     console.log(content)
+    if(!content){
+        throw new Error("no contnet found")
+    }
   const parsed = JSON.parse(content);
   return parsed;
 } catch (err) {

@@ -13,7 +13,10 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import { getPresignedUrl } from './utils/getS3Url';
 import { analyzeBookCover } from './utils/getBookDetails';
-import { isNonFiction, searchBook } from './utils/searchGoogleBooks';
+import { getGenreType, searchBook } from './utils/searchGoogleBooks';
+import { downloadPreviewPages } from './utils/getPagesFromPreview';
+import { findBestMatchingBook } from './utils/gettingTheBestPreview';
+import { title } from 'process';
 dotenv.config()
 
 
@@ -32,15 +35,29 @@ const processTask = async(startTime:number,data:{id:string,path:string})=>{
      //use fallback for image search 
   }
 
-  const bookData  = await searchBook(aboutBook?.title,aboutBook?.author?aboutBook.author:null)
-if (bookData) {
-  const previewLink = bookData.volumeInfo.previewLink;
-  console.log("Preview URL:", previewLink);
+  const booksData  = await searchBook(aboutBook?.title,aboutBook?.author?aboutBook.author:null)
+if(!booksData.length){
+
 }
-const categories = bookData.volumeInfo.categories || [];
-const nonFiction = isNonFiction(categories);
-console.log("Categories:", categories);
-console.log("Is Non-Fiction:", nonFiction);
+let responseFromModel
+try{
+ responseFromModel = await findBestMatchingBook(aboutBook,booksData)
+if(!responseFromModel.previewLink){
+    throw new Error("previewLink Not Found")
+}
+//fallback
+}catch(error){
+    console.log(error)
+    responseFromModel={
+        previewLink: booksData?.[0]?.volumeInfo?.previewLink,
+        author:booksData?.[0]?.volumeInfo?.authors?.join(","),
+        title: booksData?.[0]?.volumeInfo?.title,
+        category:getGenreType(booksData?.[0]?.volumeInfo?.categories)
+    }
+}
+const links = await downloadPreviewPages(responseFromModel?.previewLink)
+console.log(links)
+
 
   }catch(err){
     console.log(err)
