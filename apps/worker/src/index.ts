@@ -6,21 +6,20 @@
 //check the blurr
 
 //push it to    import  { exec,spawn } from 'child_process'
-import  fs from 'fs';
 import { Worker, Job } from "bullmq";
-import  { redisConnection } from '@repo/lib/src';
+import  { generalConfig, redisConnection } from '@repo/lib/src';
 import dotenv from 'dotenv';
-import axios from 'axios';
 import { getPresignedUrl } from './utils/getS3Url';
 import { analyzeBookCover } from './utils/getBookDetails';
 import { getGenreType, searchBook } from './utils/searchGoogleBooks';
 import { downloadPreviewPages } from './utils/getPagesFromPreview';
 import { findBestMatchingBook } from './utils/gettingTheBestPreview';
-import { title } from 'process';
+import { doOCR } from './utils/OCR';
+import { isMainContent, snippetBuilder } from './utils/giveTheRelevantPages';
 dotenv.config()
 
 
-const processTask = async(startTime:number,data:{id:string,path:string})=>{
+const processTask = async(jobId:string,startTime:number,data:{id:string,path:string})=>{
   const presignedUrl = await getPresignedUrl(data.path)
   try{
   const aboutTheBook = await analyzeBookCover(presignedUrl)
@@ -55,8 +54,19 @@ if(!responseFromModel.previewLink){
         category:getGenreType(booksData?.[0]?.volumeInfo?.categories)
     }
 }
-const links = await downloadPreviewPages(responseFromModel?.previewLink)
-console.log(links)
+await downloadPreviewPages(responseFromModel?.previewLink,jobId)
+const ocrResults = await doOCR(jobId)
+const snippetToPassToAI =  snippetBuilder(ocrResults,responseFromModel.category.toLowerCase()==generalConfig.FICTION?1:2)
+const resultImage = await isMainContent(snippetToPassToAI)
+let contentPage
+if(resultImage&&resultImage.file){
+  contentPage = ocrResults.filter(res=>{
+    return resultImage.file==res.filename
+  })[0]
+  const actualTextContent  = contentPage.text
+
+  // push to redis with the 
+}
 
 
   }catch(err){
@@ -69,7 +79,7 @@ const  handler  = new Worker(
     async (job: Job)=>{
           const data = job.data
         const startTime = performance.now();
-        await processTask(startTime,data);
+        await processTask(job.id||"can we generrate random uuid here ",startTime,data);
 
     },{
         connection:redisConnection,

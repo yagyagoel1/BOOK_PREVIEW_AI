@@ -22,6 +22,7 @@
     "fs": "0.0.1-security",
     "openai": "^4.103.0",
     "puppeteer": "^24.9.0",
+    "tesseract.js": "^6.0.1",
     "tsup": "^8.0.2"
   },
   "devDependencies": {
