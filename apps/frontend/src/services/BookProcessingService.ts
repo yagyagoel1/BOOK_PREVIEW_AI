@@ -42,29 +42,46 @@ export class BookProcessingService {
    * Poll job status
    */
   static async getJobStatus(jobId: string) {
-    try {
-      const response = await apiClient.get(`/statusofjob/${jobId}`)
-      const apiResponse = response.data
+    let retries = 3
+    let delay = 1000 // 1 second
 
-      if (apiResponse.success === 1) {
-        return {
-          success: true,
-          status: apiResponse.status,
-          message: apiResponse.message,
-          data: apiResponse.data,
+    while (retries > 0) {
+      try {
+        const response = await apiClient.get(`/statusofjob/${jobId}`)
+        const apiResponse = response.data
+
+        if (apiResponse.success === 1) {
+          return {
+            success: true,
+            status: apiResponse.status,
+            message: apiResponse.message,
+            data: apiResponse.data,
+          }
+        } else {
+          // Don't retry for non-network errors that the server successfully responded with
+          return {
+            success: false,
+            error: apiResponse.message || 'Failed to get job status',
+          }
         }
-      } else {
-        return {
-          success: false,
-          error: apiResponse.message || 'Failed to get job status',
+      } catch (error) {
+        console.error('Status polling error:', error)
+        retries--
+        if (retries === 0) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get job status after multiple retries',
+          }
         }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay))
+        delay *= 2 // Exponential backoff
       }
-    } catch (error) {
-      console.error('Status polling error:', error)
-      return {
+    }
+    // Should not be reached if retries are exhausted, but as a fallback:
+    return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to get job status',
-      }
+        error: 'Failed to get job status after multiple retries',
     }
   }
 
