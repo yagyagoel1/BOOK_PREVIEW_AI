@@ -103,7 +103,7 @@ export class BookProcessingService {
             progressCounter++
             lastMessage = result.message
           }
-          const progressPercentage = Math.min((progressCounter / maxProgressSteps) * 90, 90) // Max 90% during pending
+          const progressPercentage = Math.floor(Math.min((progressCounter / maxProgressSteps) * 90, 90)) // Max 90% during pending
           onProgress(statusObject, progressPercentage)
           setTimeout(poll, 5000) // Poll every 2 seconds
           break
