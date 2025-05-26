@@ -11,9 +11,6 @@
     "lint": "eslint src/ --max-warnings 0",
     "test": "jest --detectOpenHandles"
   },
-  "jest": {
-    "preset": "@repo/jest-presets/node"
-  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.816.0",
     "@aws-sdk/lib-storage": "^3.816.0",
@@ -31,9 +28,6 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.7.0",
-    "@repo/eslint-config": "workspace:*",
-    "@repo/jest-presets": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
