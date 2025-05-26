@@ -1,5 +1,5 @@
 {
-  "name": "kitchen-sink",
+  "name": "book_determiner",
   "private": true,
   "scripts": {
     "build": "turbo run build",

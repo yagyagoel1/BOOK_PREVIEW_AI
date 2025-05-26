@@ -21,6 +21,11 @@ export const defaultJobOptions = {
 
   export const generalConfig={
     S3REGION:"ap-south-1",
-    MODELNAME:"gpt-4-vision-preview"
+    GPT3:"gpt-4.1-mini",
+    GEMINI:"gemini-1.5-flash",
+    FICTION:"fiction",
+    NON_FICTION:"non-fiction",
+    CACHENAME:"status",
+    GPT4:"gpt-4o"
     
 }

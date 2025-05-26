@@ -7,8 +7,9 @@ export async function downloadPreviewPages(previewUrl: string,uuid:string) {
     headless: false, 
     args: [
       '--start-maximized',
-      '--disable-web-security',
-      '--allow-running-insecure-content'
+    '--disable-web-security',
+    '--allow-running-insecure-content',
+    '--ignore-certificate-errors'
     ]
   });
 
