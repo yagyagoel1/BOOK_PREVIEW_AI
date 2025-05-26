@@ -8,14 +8,14 @@ const s3 = new S3Client({ region: generalConfig.S3REGION , credentials: {
     },}); 
 
 
-export async function getPresignedUrl( key: string): Promise<string> {
+export async function getPresignedUrl( key: string,expiry:number=900): Promise<string> {
   const command = new GetObjectCommand({
     Bucket: process.env.BUCKETNAME,
     Key: key,
   });
 
 
-  const url = await getSignedUrl(s3, command, { expiresIn: 900 });
+  const url = await getSignedUrl(s3, command, { expiresIn: expiry });
 
   return url;
 }

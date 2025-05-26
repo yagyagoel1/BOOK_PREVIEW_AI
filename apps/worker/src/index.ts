@@ -14,8 +14,12 @@ import { getGenreType, searchBook } from './utils/searchGoogleBooks';
 import { downloadPreviewPages } from './utils/getPagesFromPreview';
 import { findBestMatchingBook } from './utils/gettingTheBestPreview';
 import { doOCR } from './utils/OCR';
+import fs from "fs"
+import path from "path"
+import { execSync } from "child_process"
 import { isMainContent, snippetBuilder } from './utils/giveTheRelevantPages';
 import { setStatus } from "./utils/redis";
+import { uploadImageToS3 } from './utils/uploadImageToS3';
 dotenv.config()
 
 
@@ -55,7 +59,7 @@ if(!responseFromModel.previewLink){
 }
 
 }catch(error){
-    console.log(error)
+  console.log("preview link not found")
     responseFromModel={
         previewLink: booksData?.[0]?.volumeInfo?.previewLink,
         author:booksData?.[0]?.volumeInfo?.authors?.join(","),
@@ -73,7 +77,24 @@ if(resultImage&&resultImage.file){
     return resultImage.file==res.filename
   })[0]
   const actualTextContent  = contentPage.text
-
+  
+  const matchedImagePath = path.join(__dirname, jobId, resultImage.file);
+  const presignedImageUrl = await uploadImageToS3(matchedImagePath);
+  
+  //delete the folder 
+  try {
+    if (fs.existsSync(path.join(__dirname, jobId))) {
+      fs.rmSync(path.join(__dirname, jobId), { recursive: true, force: true });
+    }
+  } catch (error) {
+    // fallback
+    console.warn('fs.rmSync failed, using alternative cleanup method:', error);
+    try {
+      execSync(`rm -rf "${path.join(__dirname, jobId)}"`, { stdio: 'ignore' });
+    } catch (fallbackError) {
+      console.error('Failed to cleanup directory:', fallbackError);
+    }
+  }
   // push to redis with the 
   await setStatus(jobId,{
     status:"completed",
@@ -81,8 +102,8 @@ if(resultImage&&resultImage.file){
       text:actualTextContent,
       author:responseFromModel.author as string,
       title:responseFromModel.title as string,
-      category:responseFromModel.category =="fiction"?"fiction":"non-fiction"
-
+      category:responseFromModel.category =="fiction"?"fiction":"non-fiction",
+      imageUrl: presignedImageUrl || undefined
     },
     message:"Processed Successfully"
   })
@@ -120,8 +141,9 @@ handler.on("completed", (job:Job) => {
     console.log(error)
     console.log(`Job with id ${job?.id} has failed with error ${error.message}`);
     
-    // Check if this was the final retry attempt
+
     if (job && job.attemptsMade >= (job.opts.attempts || 3)) {
+      console.log("it was the last retry")
       await setStatus(job.id || "unknown", {
         status: "failed",
         message: `Processing failed after ${job.attemptsMade} attempts: ${error.message}`

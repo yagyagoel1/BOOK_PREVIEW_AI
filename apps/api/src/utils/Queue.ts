@@ -11,8 +11,8 @@ const myQueue = new Queue(process.env.QUEUE_NAME as string, {
 export async function addJobs(path:String,id:string):Promise<null| String> {
 
   try {
-    await myQueue.add(process.env.JOB_NAME as string, { path, id }, { jobId: id });
-    return id
+    const job = await myQueue.add(process.env.JOB_NAME as string, { path, id }, { jobId: id });
+    return job.id as string
   }
   catch (error) {
     console.log(error)

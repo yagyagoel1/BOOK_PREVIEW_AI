@@ -1,72 +1,66 @@
 import { generalConfig } from '@repo/lib/src';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function findBestMatchingBook(queryTitle: {title:string,author?:string}, books: any[]) {
   const prompt = `
-You are a helpful assistant that selects the best matching book from a list.
-Given a user query with a book title and optional metadata, choose the most relevant book.
+Select the best matching book from the provided list based on the user query.
 
-User Query:
-Title: "${queryTitle.title}"
-Author: "${queryTitle.author}"
+USER QUERY:
+- Title: "${queryTitle.title}"
+- Author: "${queryTitle.author || 'Not specified'}"
 
-Book Options:
+BOOK OPTIONS:
 ${books.map((b, i) => `
-[${i + 1}]
-Title: ${b?.volumeInfo?.title}
-Author: ${b?.volumeInfo?.authors?.join(",") ?? 'Unknown'}
-Description: ${b?.volumeInfo?.description ?? 'No description'}
-Category: ${b?.volumeInfo?.categories?.join(",") ?? 'Uncategorized'}
-Link: ${b?.volumeInfo?.previewLink ?? 'No link'}
-language: ${b?.volumeInfo?.language?? "no Language"}
+[${i + 1}] 
+Title: ${b?.volumeInfo?.title || 'Unknown'}
+Author: ${b?.volumeInfo?.authors?.join(", ") || 'Unknown'}
+Description: ${b?.volumeInfo?.description?.substring(0, 200) || 'No description'}...
+Categories: ${b?.volumeInfo?.categories?.join(", ") || 'Uncategorized'}
+Preview Link: ${b?.volumeInfo?.previewLink || 'No link'}
+Language: ${b?.volumeInfo?.language || 'Unknown'}
 `).join('')}
 
-Reply With The relevant book link,author if any , title of the book and determine whether its fiction or non-fiction , it should be prioritized based on  three pointers:
-firstly it should be matching title and author if any.This should be given the most cosideration
-Secondly if you find multiple books with similar book or if only one check if it has a link if there is no link find the next most relevant book with the link
-thirdly if you still get multiple books check if you can find the book in english if yes english should be given the most priority 
+SELECTION CRITERIA (in order of priority):
+1. EXACT MATCH: Title and author match (highest priority)
+2. LINK AVAILABILITY: Must have a valid preview link
+3. LANGUAGE: English preferred if multiple options exist
+4. CONTENT TYPE: Determine if fiction or non-fiction based on categories/description
 
-Respond ONLY with a valid JSON object that strictly follows the structure above. Do not include any explanation, text, or formatting outside the JSON. 
-Output Format:
+Respond with ONLY a valid JSON object:
 {
-previewLink:"string"
-category:"fiction" or "non-fiction"
-title: "string",
-author: "string or null"}
+  "previewLink": "string",
+  "category": "fiction" or "non-fiction", 
+  "title": "string",
+  "author": "string or null"
+}`;
 
-Example:
-{
-previewLink: "https://......",
-category: "fiction",
-title: "title",
-author: null,
-}
-`;
-
-  const response = await openai.chat.completions.create({
-    model: generalConfig.GPT3,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: 'system', content: 'You are a book-matching assistant.' },
-      { role: 'user', content: prompt },
-    ],
-    temperature: 0.2,
+  const model = genAI.getGenerativeModel({ 
+    model: generalConfig.GEMINI,
+    generationConfig: {
+      temperature: 0.1,
+      topP: 0.8,
+      topK: 40,
+    }
   });
 
-  const answer = response.choices[0].message.content;
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const answer = response.text();
+  
   try {
-    console.log(answer)
-    if(!answer){
-        throw new Error("no contnet found")
+    console.log(answer);
+    if (!answer) {
+      throw new Error("No content found");
     }
-  const parsed = JSON.parse(answer);
-  return parsed;
-} catch (err) {
-  console.error("failed to parse content ", answer,"err:",err);
-  throw err;
-}
+    
+    // Clean the response to extract JSON
+    const cleanedAnswer = answer.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const parsed = JSON.parse(cleanedAnswer);
+    return parsed;
+  } catch (err) {
+    console.error("Failed to parse content:", answer, "err:", err);
+    throw err;
+  }
 }

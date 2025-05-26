@@ -21,7 +21,7 @@ await new Promise(resolve => setTimeout(resolve, 3000));
   //ts ignore because that exist in different script 
   //@ts-ignore
   await page.evaluate(() => gbppd.start());
-await new Promise(resolve => setTimeout(resolve, 60000));
+await new Promise(resolve => setTimeout(resolve, 45000));
 //@ts-ignore
   const imageUrls = await page.evaluate(() => gbppd.finish());
 
