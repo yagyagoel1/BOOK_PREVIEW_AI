@@ -18,7 +18,7 @@ res.json(response)
 })
 
 export const getStatusOfAJob= asyncHandler(async (req:Request,res:Response)=>{
-    const {jobId} =  req.body;
+    const {jobId} =  req.params;
     if(!jobId||!(typeof(jobId)=="string")){
         res.json(Resp.error("job Id is required and should be of string"))
     return

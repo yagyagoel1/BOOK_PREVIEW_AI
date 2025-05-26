@@ -8,7 +8,7 @@ const router: Router= express.Router()
 
 
 router.post("/upload", upload.single('bookimage'),handleUpload)
-router.get("/statusofjob",getStatusOfAJob)
+router.get("/statusofjob/:jobId",getStatusOfAJob)
 
 
 

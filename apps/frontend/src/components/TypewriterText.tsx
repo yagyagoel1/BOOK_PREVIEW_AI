@@ -10,10 +10,12 @@ export function TypewriterText({ text, speed = 50, className = "" }: TypewriterT
   const [displayText, setDisplayText] = useState("")
   const [isComplete, setIsComplete] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
+  const hasScrolledToStart = useRef(false)
 
   useEffect(() => {
     setDisplayText("")
     setIsComplete(false)
+    hasScrolledToStart.current = false
     let index = 0
     
     const interval = setInterval(() => {
@@ -21,17 +23,12 @@ export function TypewriterText({ text, speed = 50, className = "" }: TypewriterT
         setDisplayText(text.slice(0, index + 1))
         index++
         
-        // Auto-scroll to keep the typing text in view
-        if (textRef.current) {
-          const rect = textRef.current.getBoundingClientRect()
-          const isBelow = rect.bottom > window.innerHeight
-          
-          if (isBelow) {
-            textRef.current.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'end' 
-            })
-          }
+        if (!hasScrolledToStart.current && textRef.current) {
+          textRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          })
+          hasScrolledToStart.current = true
         }
       } else {
         setIsComplete(true)

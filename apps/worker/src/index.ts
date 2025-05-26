@@ -25,10 +25,15 @@ dotenv.config()
 
 const processTask = async(jobId:string,startTime:number,data:{id:string,path:string})=>{
   const presignedUrl = await getPresignedUrl(data.path)
+  setStatus(jobId,{
+    status:"pending",
+    message:"getting info about the book"
+  })
   await new Promise((resolve)=>setTimeout(() => {
     resolve("done")
   }, 3000))
   try{
+    
   const aboutTheBook = await analyzeBookCover(presignedUrl)
   console.log(aboutTheBook)
     const aboutBook = aboutTheBook?.details
@@ -46,13 +51,23 @@ const processTask = async(jobId:string,startTime:number,data:{id:string,path:str
   if(!aboutBook?.title){
     throw new Error("book title not found")
   }
-
+  setStatus(jobId,{
+    status:"pending",
+    message:"got details about the book searching about the book"
+  })
   const booksData  = await searchBook(aboutBook?.title,aboutBook?.author?aboutBook.author:null)
 if(!booksData.length){
-
+setStatus(jobId,{
+    status:"failed",
+    message:"Book not found"
+  })
 }
 let responseFromModel
 try{
+  setStatus(jobId,{
+    status:"pending",
+    message:"finding the best match"
+  })
  responseFromModel = await findBestMatchingBook(aboutBook,booksData)
 if(!responseFromModel.previewLink){
     throw new Error("previewLink Not Found")
@@ -67,7 +82,15 @@ if(!responseFromModel.previewLink){
         category:getGenreType(booksData?.[0]?.volumeInfo?.categories)
     }
 }
+setStatus(jobId,{
+    status:"pending",
+    message:"getting your preview"
+  })
 await downloadPreviewPages(responseFromModel?.previewLink,jobId)
+setStatus(jobId,{
+    status:"pending",
+    message:"processing your preview"
+  })
 const ocrResults = await doOCR(jobId)
 const snippetToPassToAI =  snippetBuilder(ocrResults,responseFromModel.category.toLowerCase()==generalConfig.FICTION?1:2)
 const resultImage = await isMainContent(snippetToPassToAI)

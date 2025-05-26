@@ -2,9 +2,9 @@ import { Upload, FileImage, AlertCircle, CheckCircle2, Loader2 } from "lucide-re
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { TypewriterText } from "@/components/TypewriterText"
+import { BookImage } from "@/components/BookImage"
 import { FILE_INPUT_ACCEPT, SUPPORTED_FORMATS } from "../constants"
 import { useFileValidation, useFileUpload, useBookProcessing } from "../hooks"
-import { BookProcessingService } from "../services"
 
 function BookDeterminer() {
   const { isValidImageFile } = useFileValidation()
@@ -12,15 +12,12 @@ function BookDeterminer() {
   const { 
     state, 
     progress, 
-    response, 
+    statusMessage, 
     error, 
-    bookInfo, 
+    bookData, 
     isProcessing,
     resetState,
-    updateProgress,
-    updateState,
-    setBookResult,
-    setErrorResult
+    processBookImage
   } = useBookProcessing()
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,35 +47,7 @@ function BookDeterminer() {
 
   const uploadAndAnalyze = async () => {
     if (!selectedFile) return
-
-    try {
-      updateState("uploading")
-      updateProgress(10)
-
-      await BookProcessingService.simulateUpload()
-      updateProgress(30)
-
-      updateState("processing")
-      await BookProcessingService.simulateProcessing()
-      updateProgress(60)
-
-      updateState("polling")
-      await BookProcessingService.simulatePolling()
-      updateProgress(90)
-
-      await BookProcessingService.simulateResponse()
-      updateProgress(100)
-
-      const result = await BookProcessingService.processBook()
-      
-      if (result.success && result.bookInfo && result.description) {
-        setBookResult(result.bookInfo, result.description)
-      } else if (result.error) {
-        setErrorResult(result.error)
-      }
-    } catch (err) {
-      setErrorResult("An unexpected error occurred while processing your request. Please try again.")
-    }
+    await processBookImage(selectedFile)
   }
 
   const resetApp = () => {
@@ -93,7 +62,9 @@ function BookDeterminer() {
       case "processing":
         return "Processing book data..."
       case "polling":
-        return "Identifying book..."
+        return statusMessage || "Identifying book..."
+      case "retrying":
+        return statusMessage || "Retrying analysis..."
       case "completed":
         return "Book identified successfully!"
       case "error":
@@ -108,6 +79,7 @@ function BookDeterminer() {
       case "uploading":
       case "processing":
       case "polling":
+      case "retrying":
         return <Loader2 className="h-5 w-5 animate-spin" />
       case "completed":
         return <CheckCircle2 className="h-5 w-5 text-green-400" />
@@ -223,7 +195,7 @@ function BookDeterminer() {
         )}
 
         {/* Results Section */}
-        {state === "completed" && response && bookInfo && (
+        {state === "completed" && bookData && (
           <div className="space-y-6">
             {/* Book Identification */}
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
@@ -234,30 +206,53 @@ function BookDeterminer() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-gray-400 font-medium">Title:</span>
-                  <span className="text-white font-semibold text-lg">{bookInfo.name}</span>
+                  <span className="text-white font-semibold text-lg">{bookData.title}</span>
                 </div>
+                {bookData.author && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 font-medium">Author:</span>
+                    <span className="text-white font-semibold">{bookData.author}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
-                  <span className="text-gray-400 font-medium">Genre:</span>
+                  <span className="text-gray-400 font-medium">Category:</span>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    bookInfo.genre === 'Fiction' 
+                    bookData.category === 'fiction' 
                       ? 'bg-purple-900/50 text-purple-300 border border-purple-700' 
                       : 'bg-blue-900/50 text-blue-300 border border-blue-700'
                   }`}>
-                    {bookInfo.genre}
+                    {bookData.category.charAt(0).toUpperCase() + bookData.category.slice(1)}
                   </span>
                 </div>
               </div>
             </div>
 
+            {/* Book Image */}
+            {bookData.imageUrl && (
+              <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  Page Image
+                </h3>
+                <div className="flex justify-center">
+                  <BookImage 
+                    imageUrl={bookData.imageUrl} 
+                    title={bookData.title}
+                    className="max-w-sm"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Book Preview */}
             <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6" >
               <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-400" />
-                Preview of the book: {bookInfo.name}
+                Preview of the book: {bookData.title}
               </h3>
               <div className="bg-black/50 rounded-lg p-6 border border-gray-700 min-h-[60vh] max-h-[70vh] overflow-y-auto">
                 <TypewriterText
-                  text={response}
+                  text={bookData.text}
                   speed={30}
                   className="text-gray-300 leading-relaxed text-lg"
                 />
