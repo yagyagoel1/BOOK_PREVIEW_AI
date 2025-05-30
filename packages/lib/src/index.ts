@@ -26,6 +26,7 @@ export const defaultJobOptions = {
     FICTION:"fiction",
     NON_FICTION:"non-fiction",
     CACHENAME:"status",
+    BOOKCACHENAME:"bookCache",
     GPT4:"gpt-4o"
     
 }

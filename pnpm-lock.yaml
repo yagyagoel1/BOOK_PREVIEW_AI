@@ -176,7 +176,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/lib
       axios:
-        specifier: ^1.7.9
+        specifier: ^1.9.0
         version: 1.9.0
       bullmq:
         specifier: ^5.53.0
