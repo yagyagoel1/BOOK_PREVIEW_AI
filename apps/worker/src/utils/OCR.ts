@@ -41,7 +41,6 @@ export async function doOCR(uuid:string){
   const imageFiles = fs.readdirSync(downloadDir)
     .filter((file:string) => file.endsWith('.jpg'))
     .sort((a: string, b: string) => {
-      // Extract the number from the filename (e.g., "uuid_1.jpg" -> 1)
       const getNumber = (filename: string) => {
         const match = filename.match(/_(\d+)\.jpg$/);
         return match ? parseInt(match[1], 10) : 0;
@@ -52,7 +51,6 @@ export async function doOCR(uuid:string){
   const ocrResults = [];
   let i=0;
   for (const imageFile of imageFiles) {
-    //ignore first two page according to me they are always going to be starting content 
        i++
     if(i<=2)
     continue 

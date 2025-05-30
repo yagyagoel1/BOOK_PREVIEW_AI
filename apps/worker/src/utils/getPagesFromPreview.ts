@@ -19,10 +19,9 @@ export async function downloadPreviewPages(previewUrl: string,uuid:string) {
 await new Promise(resolve => setTimeout(resolve, 3000));
   const gbppdScript = fs.readFileSync(path.resolve(__dirname, 'gbppd-mini.js'), 'utf8');
   await page.evaluate(gbppdScript);
-  //ts ignore because that exist in different script 
   //@ts-ignore
   await page.evaluate(() => gbppd.start());
-await new Promise(resolve => setTimeout(resolve, 45000));
+await new Promise(resolve => setTimeout(resolve, 60000));
 //@ts-ignore
   const imageUrls = await page.evaluate(() => gbppd.finish());
 

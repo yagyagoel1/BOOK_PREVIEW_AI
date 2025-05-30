@@ -18,7 +18,7 @@
     "@aws-sdk/s3-request-presigner": "^3.816.0",
     "@google/generative-ai": "^0.24.1",
     "@repo/lib": "workspace:*",
-    "axios": "^1.7.9",
+    "axios": "^1.9.0",
     "bullmq": "^5.53.0",
     "dotenv": "^16.4.7",
     "fs": "0.0.1-security",

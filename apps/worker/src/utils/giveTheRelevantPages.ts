@@ -38,7 +38,7 @@ The front matter includes: cover, title page, copyright, dedication, quotes, tab
 Actual content pages begin with chapter titles, numbered sections, or main body content.
 You will receive a request like:"Get me the 1 content page ignoring the front matter"or"Get me the 2 content page ignoring the front matter"
 Based on that, return the first or second valid content page.
-
+You will most probably will get at least 100 word per page if you are not getting 100 words assume that the page only contain that amount of words mostly you should ignore those pages as they are usually not the first or second page of content(but sometimes the page do are right you must analyze them carefully)
 Input Format:
 
 You will receive:

@@ -21,6 +21,10 @@ var gbppd = (function () {
     };
   return {
     start: function () {
+      if (!e) { // Check if the viewport element exists
+        console.warn('gbppd-mini.js: Could not find element with id "viewport". Skipping MutationObserver setup.');
+        return; // Exit if viewport is not found
+      }
       (t = new MutationObserver(a)),
         t.observe(e, { attributes: !0, childList: !0, subtree: !0 }),
         (c = setInterval(u, Math.floor(Math.random() * (2200 - 1800 + 1)) + 1800));

@@ -55,7 +55,6 @@ Respond with ONLY a valid JSON object:
       throw new Error("No content found");
     }
     
-    // Clean the response to extract JSON
     const cleanedAnswer = answer.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const parsed = JSON.parse(cleanedAnswer);
     return parsed;

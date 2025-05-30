@@ -2,6 +2,9 @@ import { config } from "dotenv";
 
 import { OpenAI } from "openai";
 import { generalConfig } from "@repo/lib/src";
+import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
 
 config();
 
@@ -9,8 +12,18 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function analyzeBookCover(presignedUrl: string) {
+async function getImageAsBase64(filePathOrUrl: string): Promise<string> {
+  if (filePathOrUrl.startsWith('http://') || filePathOrUrl.startsWith('https://')) {
+    const response = await axios.get(filePathOrUrl, { responseType: 'arraybuffer' });
+    return Buffer.from(response.data, 'binary').toString('base64');
+  } else {
+    const imageBuffer = fs.readFileSync(filePathOrUrl);
+    return imageBuffer.toString('base64');
+  }
+}
 
+export async function analyzeBookCover(imagePathOrUrl: string) {
+  const base64Image = await getImageAsBase64(imagePathOrUrl);
   const response = await openai.chat.completions.create({
     model: generalConfig.GPT4,
     response_format: { type: "json_object" },
@@ -30,7 +43,7 @@ Structure:
 {
 isCover:("yes" or "no"),
 isBlurry:("yes" or "no"),
-:{
+details:{
 title:output
 author:output
 },
@@ -69,8 +82,8 @@ Respond ONLY with a valid JSON object that strictly follows the structure above.
           {
             type: "image_url",
             image_url: {
-              url:presignedUrl,
-            },
+              "url": `data:image/jpeg;base64,${base64Image}`
+            }
           },
         ],
       },
