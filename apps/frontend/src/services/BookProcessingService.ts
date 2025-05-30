@@ -122,7 +122,7 @@ export class BookProcessingService {
           }
           const progressPercentage = Math.floor(Math.min((progressCounter / maxProgressSteps) * 90, 90)) // Max 90% during pending
           onProgress(statusObject, progressPercentage)
-          setTimeout(poll, 5000) // Poll every 2 seconds
+          setTimeout(poll, 5000) // Poll every 5 seconds
           break
 
         case 'retrying':

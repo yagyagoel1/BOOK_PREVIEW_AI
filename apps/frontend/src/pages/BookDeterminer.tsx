@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress"
 import { TypewriterText } from "@/components/TypewriterText"
 import { BookImage } from "@/components/BookImage"
 import { FILE_INPUT_ACCEPT, SUPPORTED_FORMATS } from "../constants"
-import { useFileValidation, useFileUpload, useBookProcessing } from "../hooks"
+import { useFileValidation, useFileUpload, useBookProcessing, useStatusBarMessages } from "../hooks"
 
 function BookDeterminer() {
   const { isValidImageFile } = useFileValidation()
@@ -19,6 +19,12 @@ function BookDeterminer() {
     resetState,
     processBookImage
   } = useBookProcessing()
+
+  // Enhanced status messages with encouragement
+  const { displayMessage, isShowingEncouragement } = useStatusBarMessages(
+    statusMessage, 
+    isProcessing
+  )
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -62,9 +68,9 @@ function BookDeterminer() {
       case "processing":
         return "Processing book data..."
       case "polling":
-        return statusMessage || "Identifying book..."
+        return displayMessage || statusMessage || "Identifying book..."
       case "retrying":
-        return statusMessage || "Retrying analysis..."
+        return displayMessage || statusMessage || "Retrying analysis..."
       case "completed":
         return "Book identified successfully!"
       case "error":
@@ -180,7 +186,14 @@ function BookDeterminer() {
           <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 mb-8">
             <div className="flex items-center gap-3 mb-4">
               {getStateIcon()}
-              <span className="font-medium">{getStateMessage()}</span>
+              <span className={`font-medium ${isShowingEncouragement ? 'text-blue-300 transition-colors duration-300' : ''}`}>
+                {getStateMessage()}
+              </span>
+              {isShowingEncouragement && (
+                <span className="text-xs bg-blue-900/30 text-blue-400 px-2 py-1 rounded-full border border-blue-600/30 animate-pulse">
+                  💫
+                </span>
+              )}
             </div>
             
             {isProcessing && (
