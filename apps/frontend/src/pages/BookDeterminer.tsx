@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { TypewriterText } from "@/components/TypewriterText"
 import { BookImage } from "@/components/BookImage"
+import TryNow from "@/components/TryNow"; // Added import
 import { FILE_INPUT_ACCEPT, SUPPORTED_FORMATS } from "../constants"
 import { useFileValidation, useFileUpload, useBookProcessing, useStatusBarMessages } from "../hooks"
 
@@ -25,6 +26,27 @@ function BookDeterminer() {
     statusMessage, 
     isProcessing
   )
+
+  const handleTryNowBookSelect = async (imageSrc: string, fileName: string) => {
+    // Fetch the image and create a File object
+    try {
+      const response = await fetch(imageSrc);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: blob.type });
+      
+      if (isValidImageFile(file)) {
+        handleFileSelect(file); // This will set the previewUrl and selectedFile
+        resetState();
+        // Automatically trigger upload and analysis
+        await processBookImage(file);
+      } else {
+        alert(`Selected file is not a valid image: ${fileName}`);
+      }
+    } catch (error) {
+      console.error("Error fetching or processing sample book image:", error);
+      alert("Could not load the sample book image. Please try again.");
+    }
+  };
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -107,6 +129,11 @@ function BookDeterminer() {
           <p className="text-gray-400 text-lg">
             Upload a book image and get AI-powered book identification and preview
           </p>
+        </div>
+
+        {/* Try Now Section */}
+        <div className="mb-8">
+          <TryNow onBookSelect={handleTryNowBookSelect} />
         </div>
 
         {/* Upload Area */}
