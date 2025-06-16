@@ -2,14 +2,16 @@
 import axios from 'axios'
 
 // Centralized base URL - change this to your actual API endpoint
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+export const BASE_URL = 'https://f0b7-13-232-153-175.ngrok-free.app/api'
 
 // Create axios instance with base configuration
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 30000, // 30 seconds timeout
   headers: {
+
     'Content-Type': 'application/json',
+    "ngrok-skip-browser-warning": "69420"
   },
 })
 
