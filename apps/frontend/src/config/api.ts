@@ -2,7 +2,7 @@
 import axios from 'axios'
 
 // Centralized base URL - change this to your actual API endpoint
-export const BASE_URL = 'https://f0b7-13-232-153-175.ngrok-free.app/api'
+export const BASE_URL = 'https://415c-13-232-153-175.ngrok-free.app/api'
 
 // Create axios instance with base configuration
 export const apiClient = axios.create({
