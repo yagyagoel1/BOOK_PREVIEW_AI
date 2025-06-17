@@ -1,5 +1,6 @@
 import { apiClient } from '../config/api'
 import { StatusObject } from '../types'
+import axios from 'axios'; // Import axios to check for AxiosError
 
 export class BookProcessingService {
   /**
@@ -30,10 +31,42 @@ export class BookProcessingService {
         }
       }
     } catch (error) {
-      console.error('Upload error:', error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Upload failed',
+      console.error('Upload error:', error);
+
+      if (axios.isAxiosError(error)) {
+        // Axios-specific error handling
+        if (error.response) {
+          // Server responded with an error status
+          if (error.response.status === 413) {
+            return {
+              success: false,
+              error: 'Image size is too huge. Please upload a smaller file.',
+            };
+          }
+          // For other HTTP errors, attempt to use server's message, then Axios's message
+          const serverMessage = typeof error.response.data === 'object' && error.response.data !== null && 'message' in error.response.data ? String(error.response.data.message) : undefined;
+          return {
+            success: false,
+            error: serverMessage || error.message || `Request failed with status code ${error.response.status}`,
+          };
+        } else {
+          // Network error or other issue where server didn't respond (e.g., CORS, DNS, client-side network issue)
+          // error.message here is typically "Network Error"
+          return {
+            success: false,
+            error: error.message || 'A network error occurred. Please check your connection.',
+          };
+        }
+      } else {
+        // Non-Axios error (e.g., error in code before request, or a custom error thrown)
+        let errorMessage = 'An unknown error occurred during upload.';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        return {
+          success: false,
+          error: errorMessage,
+        };
       }
     }
   }
